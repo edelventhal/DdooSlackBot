@@ -2,11 +2,13 @@
 /*global process*/
 /*global console*/
 /*global setTimeout*/
+/*global Buffer*/
 
 require('dotenv').config();
 var slack = require('slack');
 var bot = slack.rtm.client();
 var token = process.env.SLACK_TOKEN;
+var http = require('http');
 
 //always use lowercase here, case is thrown away
 var activationPhrases =
@@ -109,12 +111,46 @@ else
     bot.listen({ token: token } );
 }
 
-//keep the app busy so it doesn't shut down on Heroku
-// var busyLoop = function()
-// {
-//     setTimeout( busyLoop, 10000 );
-// };
-// busyLoop();
+var createServer = function()
+{
+    http.createServer(function(request, response)
+    {
+        var headers = request.headers;
+        var method = request.method;
+        var url = request.url;
+        var body = [];
+        request.on('error', function(err)
+        {
+            console.error(err);
+        }).on('data', function(chunk)
+        {
+            body.push(chunk);
+        }).on('end', function()
+        {
+            body = Buffer.concat(body).toString();
+
+            response.on('error', function(err)
+            {
+                console.error(err);
+            });
+
+            response.statusCode = 200;
+            response.setHeader('Content-Type', 'application/json');
+
+            var responseBody =
+            {
+                headers: headers,
+                method: method,
+                url: url,
+                body: body
+            };
+
+            response.write(JSON.stringify(responseBody));
+            response.end();
+        });
+    }).listen( process.env.PORT );
+    console.log( "Created an HTTP server on port " + process.env.PORT );
+};
 
 //start listening via HTTP so the app doesn't shut down on Heroku
-require('http').createServer( function(){} ).listen( process.env.PORT || 5000 );
+createServer();
