@@ -83,4 +83,11 @@ bot.message( function(messageData)
     }
 }.bind(this));
 
-bot.listen({ token: token } );
+if ( !token )
+{
+    console.log( "ERROR: You don't have a SLACK_TOKEN in your environment. Either create a .env file or add it to bash_profile. It should be your Slack bot token." );
+}
+else
+{
+    bot.listen({ token: token } );
+}
