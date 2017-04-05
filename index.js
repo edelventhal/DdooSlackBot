@@ -1,11 +1,20 @@
 /*global require*/
 /*global process*/
 /*global console*/
+/*global setTimeout*/
 
 require('dotenv').config();
 var slack = require('slack');
 var bot = slack.rtm.client();
 var token = process.env.SLACK_TOKEN;
+
+//always use lowercase here, case is thrown away
+var activationPhrases =
+[
+    ":smash:",
+    "smash?",
+    "round 2?"
+];
 
 var responses =
 [
@@ -52,7 +61,15 @@ var shouldRespondToMessage = function( messageData )
     }
     
     var lower = messageData.text.toLowerCase();
-    return lower.indexOf( "smash?" ) >= 0 || lower.indexOf( ":smash:" ) >= 0;
+    var activationPhraseIndex;
+    for ( activationPhraseIndex = 0; activationPhraseIndex < activationPhrases.length; activationPhraseIndex++ )
+    {
+        if ( lower.indexOf( activationPhrases[ activationPhraseIndex ] ) >= 0 )
+        {
+            return true;
+        }
+    }
+    return false;
 };
 
 var getResponseMessage = function()
@@ -91,3 +108,10 @@ else
 {
     bot.listen({ token: token } );
 }
+
+//keep the app busy so it doesn't shut down on Heroku
+var busyLoop = function()
+{
+    setTimeout( busyLoop, 10000 );
+};
+busyLoop();
