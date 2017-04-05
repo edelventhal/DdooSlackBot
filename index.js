@@ -110,8 +110,11 @@ else
 }
 
 //keep the app busy so it doesn't shut down on Heroku
-var busyLoop = function()
-{
-    setTimeout( busyLoop, 10000 );
-};
-busyLoop();
+// var busyLoop = function()
+// {
+//     setTimeout( busyLoop, 10000 );
+// };
+// busyLoop();
+
+//start listening via HTTP so the app doesn't shut down on Heroku
+require('http').createServer( function(){} ).listen( process.env.PORT || 5000 );
